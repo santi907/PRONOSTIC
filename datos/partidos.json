@@ -1,26 +1,32 @@
 [
   {
-    "local": "América Mineiro",
-    "visitante": "Sport Recife",
+    "local": "Equipo Local 1",
+    "visitante": "Equipo Visitante 1",
     "fecha": "2026-07-12",
-    "prediccion": "Torneo: Serie B (Brasil). Pronóstico: Menos de 2.5 goles totales (Partido de alta fricción táctica)."
+    "prediccion": "Torneo: Serie B / Liga. Pronóstico: Gana o empata el local."
   },
   {
-    "local": "Goiás",
-    "visitante": "Ceará",
-    "fecha": "2026-07-13",
-    "prediccion": "Torneo: Serie B (Brasil). Pronóstico: Gana o empata Goiás (Historial a favor del local)."
+    "local": "Equipo Local 2",
+    "visitante": "Equipo Visitante 2",
+    "fecha": "2026-07-12",
+    "prediccion": "Pronóstico: Más de 1.5 goles totales."
   },
   {
-    "local": "Argentina",
-    "visitante": "Francia",
-    "fecha": "2026-07-14",
-    "prediccion": "Semifinal del Mundial. Partido de alta intensidad. Pronóstico: Ambos anotan y más de 2.5 goles totales."
+    "local": "Equipo Local 3",
+    "visitante": "Equipo Visitante 3",
+    "fecha": "2026-07-12",
+    "prediccion": "Pronóstico: Ambos equipos anotan."
   },
   {
-    "local": "Brasil",
-    "visitante": "España",
-    "fecha": "2026-07-15",
-    "prediccion": "Semifinal del Mundial. Pronóstico: Clasifica España. Apuesta recomendada: Menos de 3.5 goles."
+    "local": "Equipo Local 4",
+    "visitante": "Equipo Visitante 4",
+    "fecha": "2026-07-12",
+    "prediccion": "Pronóstico: Menos de 2.5 goles."
+  },
+  {
+    "local": "Equipo Local 5",
+    "visitante": "Equipo Visitante 5",
+    "fecha": "2026-07-12",
+    "prediccion": "Pronóstico: Apuesta sin empate a favor del visitante."
   }
 ]
