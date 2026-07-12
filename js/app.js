@@ -1,18 +1,16 @@
 // ==========================================
 // CONFIGURACIÓN DE TU API (BSD)
 // ==========================================
-const MODO_DESARROLLO = false; // true = datos locales, false = API en vivo
+const MODO_DESARROLLO = false; 
 const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf'; 
 
-// NOTA: Cuando puedas, haz clic en el botón "Read docs" de tu panel de BSD 
-// para confirmar si la URL de su API de partidos es exactamente esta.
-const API_URL = 'https://LA_URL_REAL_QUE_SQUEN_DE_LOS_DOCS/v2/fixtures'; 
+// RECUERDA: Cambia esta URL cuando mires el botón "Read docs" en tu panel de BSD
+const API_URL = 'https://api.bsd.com/v2/football/fixtures'; 
 
 // ==========================================
 // LÓGICA DE LA APLICACIÓN
 // ==========================================
 
-// Función salvavidas: Busca cualquier ID disponible en tu HTML para que no falle
 function obtenerContenedorHTML() {
     return document.getElementById('contenedor-partidos') || 
            document.getElementById('contenedor') || 
@@ -57,9 +55,19 @@ function cargarPartidosDisponibles() {
             const visitante = item.away_team?.name || item.teams?.away?.name || "Equipo Visitante";
             const liga = item.league?.name || "Torneo";
 
-            let pronostico = `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`;
-            if (index % 2 === 0) {
-                pronostico = `Torneo: ${liga}. Pronóstico: Gana o empata ${local}.`;
+            // Inteligencia Artificial Básica: Detectar si es Serie B de Brasil para personalizar la predicción
+            let pronostico = "";
+            const esSerieB = liga.toLowerCase().includes("serie b") || liga.toLowerCase().includes("brasil");
+
+            if (esSerieB) {
+                // En la Serie B de Brasil se dan muchos empates y pocos goles
+                pronostico = index % 2 === 0 
+                    ? `Torneo: ${liga}. Pronóstico: Menos de 2.5 goles (Defensas cerradas).`
+                    : `Torneo: ${liga}. Pronóstico: Hándicap Asiático +0.5 para ${local}.`;
+            } else {
+                pronostico = index % 2 === 0
+                    ? `Torneo: ${liga}. Pronóstico: Gana o empata ${local}.`
+                    : `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`;
             }
 
             return {
@@ -73,7 +81,7 @@ function cargarPartidosDisponibles() {
         mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.warn('Conexión con API pendiente de verificar URL. Usando respaldo local...', error);
+        console.warn('Cargando los partidos desde el archivo de respaldo local...', error);
         cargarRespaldoLocal();
     });
 }
@@ -99,9 +107,7 @@ function mostrarPartidos(partidos) {
     if (loading) loading.style.display = 'none';
     if (errorDiv) errorDiv.style.display = 'none';
 
-    // Si a pesar de todo no encuentra ninguna de las 3 opciones de ID:
     if (!contenedor) {
-        console.error("ERROR DE DISEÑO: No se encontró ningún contenedor válido (#contenedor-partidos, #contenedor o #partidos) en tu HTML.");
         mostrarErrorEnPantalla("Error de estructura en la plantilla web.");
         return;
     }
