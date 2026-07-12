@@ -6,7 +6,7 @@ const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf';
 
 // NOTA: Cuando puedas, haz clic en el botón "Read docs" de tu panel de BSD 
 // para confirmar si la URL de su API de partidos es exactamente esta.
-const API_URL = 'https://api.bsd.com/v2/football/fixtures'; 
+const API_URL = 'https://LA_URL_REAL_QUE_SQUEN_DE_LOS_DOCS/v2/fixtures'; 
 
 // ==========================================
 // LÓGICA DE LA APLICACIÓN
