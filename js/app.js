@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contenedorPartidos = document.getElementById('contenedor-partidos');
 
     // 1. Cargar datos desde el archivo JSON local
-    fetch('./datos/partidos.json')
+    fetch('./datos/partidos.json?v=2')
         .then(response => {
             if (!response.ok) {
                 throw new Error(`No se pudo leer el archivo de predicciones (Status: ${response.status})`);
