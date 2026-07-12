@@ -1,11 +1,11 @@
 // ==========================================
-// CONFIGURACIÓN DE TU API (BSD)
+// CONFIGURACIÓN REAL DE TU API (BZZOIRO / BSD)
 // ==========================================
 const MODO_DESARROLLO = false; 
 const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf'; 
 
-// RECUERDA: Cambia esta URL cuando mires el botón "Read docs" en tu panel de BSD
-const API_URL = 'https://api.bsd.com/v2/football/fixtures'; 
+// URL real extraída y adaptada de tu documentación de Bzzoiro
+const API_URL = 'https://sports.bzzoiro.com/football/api/v2/matches/live/'; 
 
 // ==========================================
 // LÓGICA DE LA APLICACIÓN
@@ -18,7 +18,7 @@ function obtenerContenedorHTML() {
 }
 
 function cargarPartidosDisponibles() {
-    console.log("Iniciando carga de partidos...");
+    console.log("Conectando en vivo con sports.bzzoiro.com...");
     
     const loading = document.getElementById('loading');
     const errorDiv = document.getElementById('error');
@@ -31,6 +31,7 @@ function cargarPartidosDisponibles() {
         return;
     }
 
+    // Petición con el formato Token exacto de tu documentación
     fetch(API_URL, {
         method: 'GET',
         headers: {
@@ -39,41 +40,42 @@ function cargarPartidosDisponibles() {
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error(`Error Status ${response.status}`);
+        if (!response.ok) throw new Error(`Error Bzzoiro (Status ${response.status})`);
         return response.json();
     })
     .then(data => {
-        const partidosAPI = data.response || data.data || data;
+        // Bzzoiro suele entregar los partidos en un arreglo directo, en 'data' o en 'results'
+        const partidosAPI = data.results || data.data || (Array.isArray(data) ? data : null);
 
         if (!partidosAPI || partidosAPI.length === 0) {
+            console.warn("No hay partidos en vivo en este instante en la API. Usando respaldo.");
             cargarRespaldoLocal();
             return;
         }
 
+        // Mapeamos los partidos manejando cualquier variante de nombres de campo de Bzzoiro
         const partidosTransformados = partidosAPI.slice(0, 10).map((item, index) => {
-            const local = item.home_team?.name || item.teams?.home?.name || "Equipo Local";
-            const visitante = item.away_team?.name || item.teams?.away?.name || "Equipo Visitante";
-            const liga = item.league?.name || "Torneo";
+            const local = item.home_team?.name || item.home?.name || item.home_team || "Equipo Local";
+            const visitante = item.away_team?.name || item.away?.name || item.away_team || "Equipo Visitante";
+            const liga = item.league?.name || item.tournament?.name || "Serie B / Liga";
 
-            // Inteligencia Artificial Básica: Detectar si es Serie B de Brasil para personalizar la predicción
             let pronostico = "";
-            const esSerieB = liga.toLowerCase().includes("serie b") || liga.toLowerCase().includes("brasil");
+            const esFutbolBrasil = liga.toLowerCase().includes("serie b") || liga.toLowerCase().includes("brasil");
 
-            if (esSerieB) {
-                // En la Serie B de Brasil se dan muchos empates y pocos goles
+            if (esFutbolBrasil) {
                 pronostico = index % 2 === 0 
-                    ? `Torneo: ${liga}. Pronóstico: Menos de 2.5 goles (Defensas cerradas).`
-                    : `Torneo: ${liga}. Pronóstico: Hándicap Asiático +0.5 para ${local}.`;
+                    ? `Torneo: ${liga}. Pronóstico: Menos de 2.5 goles (Partido cerrado).`
+                    : `Torneo: ${liga}. Pronóstico: Gana o empata ${local} por localía.`;
             } else {
                 pronostico = index % 2 === 0
-                    ? `Torneo: ${liga}. Pronóstico: Gana o empata ${local}.`
-                    : `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`;
+                    ? `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`
+                    : `Torneo: ${liga}. Pronóstico: Apuesta sin empate a favor de ${local}.`;
             }
 
             return {
                 local: local,
                 visitante: visitante,
-                fecha: new Date().toISOString().split('T')[0],
+                fecha: "HOY EN VIVO",
                 prediccion: pronostico
             };
         });
@@ -81,7 +83,7 @@ function cargarPartidosDisponibles() {
         mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.warn('Cargando los partidos desde el archivo de respaldo local...', error);
+        console.warn('API sin partidos en vivo o reconectando. Activando respaldo local...', error);
         cargarRespaldoLocal();
     });
 }
@@ -107,11 +109,7 @@ function mostrarPartidos(partidos) {
     if (loading) loading.style.display = 'none';
     if (errorDiv) errorDiv.style.display = 'none';
 
-    if (!contenedor) {
-        mostrarErrorEnPantalla("Error de estructura en la plantilla web.");
-        return;
-    }
-    
+    if (!contenedor) return;
     contenedor.innerHTML = '';
 
     partidos.forEach(partido => {
@@ -122,7 +120,7 @@ function mostrarPartidos(partidos) {
                     <span class="vs">vs</span>
                     <span class="equipo-visitante">${partido.visitante}</span>
                 </div>
-                <p class="fecha">Fecha: ${partido.fecha}</p>
+                <p class="fecha">Estado: <strong>${partido.fecha}</strong></p>
                 <div class="prediccion">
                     <p><strong>Predicción:</strong> ${partido.prediccion}</p>
                 </div>
