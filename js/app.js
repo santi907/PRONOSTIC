@@ -1,63 +1,19 @@
-async function cargarPartidosDisponibles() {
-  const loading = document.getElementById('loading');
-  const errorDiv = document.getElementById('error');
+Dashboard
+Welcome back, Jhon.
+fredyruiz91@gmail.com · 773 requests in the last 30 days.
 
-  if (loading) loading.style.display = 'block';
-  if (errorDiv) errorDiv.style.display = 'none';
+API Token
+Token
+dd07cdbeed19f58195949f42b3836397a172cb11
+Copy
+Regenerate
+Send this on every API request: Authorization: Token dd07cdbe…
 
-  try {
-    const res = await fetch('./datos/partidos.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('No se pudo leer partidos.json');
-    const datos = await res.json();
-    mostrarPartidos(Array.isArray(datos) ? datos : []);
-  } catch (error) {
-    console.error(error);
-    mostrarErrorEnPantalla('Predicciones en actualización. Intenta más tarde.');
-  } finally {
-    if (loading) loading.style.display = 'none';
-  }
-}
+⚡ Sports Addon
+Unlock tennis, CS:GO, darts, hockey and horse racing APIs + MCP servers — $5/month. Football stays free.
 
-function mostrarPartidos(partidos) {
-  const contenedor = document.getElementById('contenedor-partidos');
-  const loading = document.getElementById('loading');
-  const errorDiv = document.getElementById('error');
-
-  if (!contenedor) return;
-  if (loading) loading.style.display = 'none';
-  if (errorDiv) errorDiv.style.display = 'none';
-
-  contenedor.innerHTML = partidos.map(partido => {
-    const local = partido.local ?? 'Equipo Local';
-    const visitante = partido.visitante ?? 'Equipo Visitante';
-    const fecha = partido.fecha ?? 'HOY';
-    const prediccion = partido.prediccion ?? 'Sin predicción';
-
-    return `
-      <div class="card">
-        <div class="partido-header">
-          <span class="equipo-local">${local}</span>
-          <span class="vs">vs</span>
-          <span class="equipo-visitante">${visitante}</span>
-        </div>
-        <p class="fecha">Fecha: <strong>${fecha}</strong></p>
-        <div class="prediccion">
-          <p><strong>Predicción:</strong> ${prediccion}</p>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function mostrarErrorEnPantalla(mensaje) {
-  const loading = document.getElementById('loading');
-  const errorDiv = document.getElementById('error');
-
-  if (loading) loading.style.display = 'none';
-  if (errorDiv) {
-    errorDiv.textContent = mensaje;
-    errorDiv.style.display = 'block';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', cargarPartidosDisponibles);
+Get the Addon →
+Your addons
+⚽ Football API
+Free
+REST API v2 + MCP server. All endpoints, no rate limit.
