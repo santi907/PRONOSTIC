@@ -1,62 +1,113 @@
-// 1. Configuración de la API con tu clave real
-const API_KEY = 'eaaa85924d5646b7afc2aa622e887f5c';
-// Usamos este proxy gratuito para evitar que el navegador bloquee la petición (Error de CORS)
-const PROXY_URL = 'https://corsproxy.io/?'; 
-const API_URL = `${PROXY_URL}https://api.football-data.org/v4/matches`;
+// 1. Configuración de API-Sports con tu clave real
+const API_KEY = '7232d57a2397121a214f82a7dce2d51a';
+const PROXY_URL = 'https://corsproxy.io/?';
 
-// 2. Función principal para obtener los partidos del día
+// Obtenemos la fecha de hoy de forma automática en formato YYYY-MM-DD
+const hoy = new Date().toISOString().split('T')[0];
+const API_URL = `${PROXY_URL}https://v3.football.api-sports.io/fixtures?date=${hoy}`;
+
+// 2. Función principal para traer partidos de hoy
 function cargarPartidosDisponibles() {
-    // Aquí puedes poner el contenedor de tus tarjetas (ej: document.getElementById('contenedor'))
-    const contenedor = document.getElementById('partidos-container'); 
-
     fetch(API_URL, {
-        headers: { 'X-Auth-Token': API_KEY }
+        headers: {
+            'x-apisports-key': API_KEY,
+            'x-rapidapi-key': API_KEY // Ponemos ambos encabezados por seguridad
+        }
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Error al conectar con la API de fútbol');
+            throw new Error('Error al conectar con API-Sports');
         }
         return response.json();
     })
     .then(data => {
-        // La API nos devuelve un objeto. Buscamos la lista de partidos adentro de 'matches'
-        const partidosAPI = data.matches;
+        // API-Sports entrega la lista de partidos dentro de 'response'
+        const partidosAPI = data.response;
 
         if (!partidosAPI || partidosAPI.length === 0) {
-            console.log("No hay partidos programados para hoy.");
-            // Opcional: Aquí podrías llamar a una función que cargue tus partidos locales de respaldo
+            console.log("No hay partidos programados para hoy en la API. Usando respaldo local...");
+            cargarRespaldoLocal();
             return;
         }
 
-        // 3. Mapeamos los datos de la API al formato exacto que ya entiende tu CSS y HTML
-        const partidosTransformados = partidosAPI.slice(0, 8).map((partido, index) => {
-            // Extraemos los nombres cortos o completos de los equipos
-            const equipoLocal = partido.homeTeam.shortName || partido.homeTeam.name;
-            const equipoVisitante = partido.awayTeam.shortName || partido.awayTeam.name;
-            const nombreCompeticion = partido.competition.name;
+        // Mapeamos los datos de API-Sports a la estructura de tus tarjetas
+        const partidosTransformados = partidosAPI.slice(0, 10).map((item, index) => {
+            const equipoLocal = item.teams.home.name;
+            const equipoVisitante = item.teams.away.name;
+            const nombreLiga = item.league.name;
+
+            // Generamos un pronóstico simulado divertido según el partido
+            let pronostico = `Torneo: ${nombreLiga}. Pronóstico: Más de 1.5 goles totales o ambos anotan.`;
+            if (index % 3 === 0) {
+                pronostico = `Torneo: ${nombreLiga}. Pronóstico: Alta probabilidad de victoria/empate para ${equipoLocal} (1X).`;
+            } else if (index % 3 === 1) {
+                pronostico = `Torneo: ${nombreLiga}. Pronóstico: Más de 2.5 goles totales. Juego muy dinámico.`;
+            }
 
             return {
-                id: partido.id || index,
                 local: equipoLocal,
                 visitante: equipoVisitante,
-                fecha: partido.utcDate.split('T')[0], // Corta la fecha para que quede YYYY-MM-DD
-                // Como la API no trae predicciones (solo datos), creamos un pronóstico inteligente automatizado:
-                prediccion: `Torneo: ${nombreCompeticion}. Pronóstico automático: Alta probabilidad de más de 1.5 goles totales o victoria/empate para ${equipoLocal}.`
+                fecha: item.fixture.date.split('T')[0],
+                prediccion: pronostico
             };
         });
 
-        // 4. Enviamos los partidos transformados a tu función encargada de pintar las tarjetas
-        // (Asegúrate de cambiar 'mostrarPartidos' por el nombre real de tu función de renderizado)
-        mostrarPartidos(partidosTransformados); 
+        mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.error('Hubo un problema con la API:', error);
-        // Fallback: Si la API falla o excede el límite diario, puedes cargar el JSON local para que la web nunca quede vacía
-        fetch('./datos/partidos.json?v=2')
-            .then(res => res.json())
-            .then(datosLocales => mostrarPartidos(datosLocales));
+        console.error('Hubo un fallo con la API:', error);
+        cargarRespaldoLocal();
     });
 }
 
-// Ejecutar la función al cargar la página
+// 3. Función de respaldo (Fallback) si la API supera su límite diario
+function cargarRespaldoLocal() {
+    fetch('./datos/partidos.json?v=2')
+        .then(res => res.json())
+        .then(datosLocales => mostrarPartidos(datosLocales))
+        .catch(err => console.error('No se pudo cargar tampoco el respaldo local:', err));
+}
+
+// 4. Función para renderizar y pintar las tarjetas en el HTML
+function mostrarPartidos(partidos) {
+    // Buscamos el contenedor. Si tu ID en el HTML es diferente, cámbialo aquí abajo.
+    const contenedor = document.getElementById('partidos-container') || document.getElementById('contenedor') || document.querySelector('.contenedor');
+
+    if (!contenedor) {
+        console.error("No encontramos tu contenedor HTML para renderizar los partidos.");
+        return;
+    }
+
+    // Limpiamos el texto de "Cargando predicciones..."
+    contenedor.innerHTML = '';
+
+    // Dibujamos cada partido usando tus clases CSS
+    partidos.forEach(partido => {
+        const tarjetaHTML = `
+            <div class="card">
+                <div class="partido-header">
+                    <span class="equipo-local">${partido.local}</span>
+                    <span class="vs">vs</span>
+                    <span class="equipo-visitante">${partido.visitante}</span>
+                </div>
+                <p class="fecha">Fecha: ${partido.fecha}</p>
+                <div class="prediccion">
+                    <p><strong>Predicción:</strong> ${partido.prediccion}</p>
+                </div>
+            </div>
+        `;
+        contenedor.innerHTML += tarjetaHTML;
+    });
+}
+
+// Inicializar la carga cuando el HTML esté listo
 document.addEventListener('DOMContentLoaded', cargarPartidosDisponibles);
+
+// 5. REGISTRO DEL SERVICE WORKER (Manteniendo viva tu PWA)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado con éxito en el ámbito:', reg.scope))
+            .catch(err => console.error('Error al registrar el Service Worker:', err));
+    });
+}
