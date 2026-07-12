@@ -1,39 +1,38 @@
 // ==========================================
-// CONFIGURACIÓN DE TU NUEVA API (BSD)
+// CONFIGURACIÓN DE TU API (BSD)
 // ==========================================
-
-// true = Usa el archivo local partidos.json
-// false = Conecta en vivo con la API de BSD
-const MODO_DESARROLLO = false; 
-
-// Tu Token de BSD extraído de tu panel
+const MODO_DESARROLLO = false; // true = datos locales, false = API en vivo
 const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf'; 
 
-// URL de BSD (Revisa la pestaña 'Read docs' en tu panel si necesitas cambiar el endpoint de partidos)
-const API_URL = 'https://api.bsd.com/v2/football/fixtures'; // Ajusta esta URL según sus docs si es necesario
+// NOTA: Cuando puedas, haz clic en el botón "Read docs" de tu panel de BSD 
+// para confirmar si la URL de su API de partidos es exactamente esta.
+const API_URL = 'https://api.bsd.com/v2/football/fixtures'; 
 
 // ==========================================
 // LÓGICA DE LA APLICACIÓN
 // ==========================================
-const DOM = {
-    loading: () => document.getElementById('loading'),
-    error: () => document.getElementById('error'),
-    contenedor: () => document.getElementById('contenedor-partidos')
-};
+
+// Función salvavidas: Busca cualquier ID disponible en tu HTML para que no falle
+function obtenerContenedorHTML() {
+    return document.getElementById('contenedor-partidos') || 
+           document.getElementById('contenedor') || 
+           document.getElementById('partidos');
+}
 
 function cargarPartidosDisponibles() {
-    console.log("Iniciando carga de partidos con BSD Football API...");
+    console.log("Iniciando carga de partidos...");
     
-    if (DOM.loading()) DOM.loading().style.display = 'block';
-    if (DOM.error()) DOM.error().style.display = 'none';
+    const loading = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    
+    if (loading) loading.style.display = 'block';
+    if (errorDiv) errorDiv.style.display = 'none';
 
     if (MODO_DESARROLLO) {
-        console.log("Modo Desarrollo: Cargando datos locales.");
         setTimeout(cargarRespaldoLocal, 500);
         return;
     }
 
-    // Petición con el formato de autorización exacto que te pide BSD
     fetch(API_URL, {
         method: 'GET',
         headers: {
@@ -42,24 +41,21 @@ function cargarPartidosDisponibles() {
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error(`Error BSD (Status ${response.status})`);
+        if (!response.ok) throw new Error(`Error Status ${response.status}`);
         return response.json();
     })
     .then(data => {
-        // Adaptador flexible: BSD suele entregar los datos en 'data' o directamente en el arreglo
         const partidosAPI = data.response || data.data || data;
 
         if (!partidosAPI || partidosAPI.length === 0) {
-            console.warn("No se recibieron partidos de la API hoy. Activando respaldo.");
             cargarRespaldoLocal();
             return;
         }
 
-        // Mapeo de partidos (Ajustado para proteger la app si los nombres de campos varían)
         const partidosTransformados = partidosAPI.slice(0, 10).map((item, index) => {
             const local = item.home_team?.name || item.teams?.home?.name || "Equipo Local";
             const visitante = item.away_team?.name || item.teams?.away?.name || "Equipo Visitante";
-            const liga = item.league?.name || "Torneo Internacional";
+            const liga = item.league?.name || "Torneo";
 
             let pronostico = `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`;
             if (index % 2 === 0) {
@@ -77,7 +73,7 @@ function cargarPartidosDisponibles() {
         mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.warn('Estructura de API diferente o enlace offline. Usando respaldo local...', error);
+        console.warn('Conexión con API pendiente de verificar URL. Usando respaldo local...', error);
         cargarRespaldoLocal();
     });
 }
@@ -96,11 +92,20 @@ function cargarRespaldoLocal() {
 }
 
 function mostrarPartidos(partidos) {
-    const contenedor = DOM.contenedor();
-    if (DOM.loading()) DOM.loading().style.display = 'none';
-    if (DOM.error()) DOM.error().style.display = 'none';
+    const contenedor = obtenerContenedorHTML();
+    const loading = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
 
-    if (!contenedor) return;
+    if (loading) loading.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
+
+    // Si a pesar de todo no encuentra ninguna de las 3 opciones de ID:
+    if (!contenedor) {
+        console.error("ERROR DE DISEÑO: No se encontró ningún contenedor válido (#contenedor-partidos, #contenedor o #partidos) en tu HTML.");
+        mostrarErrorEnPantalla("Error de estructura en la plantilla web.");
+        return;
+    }
+    
     contenedor.innerHTML = '';
 
     partidos.forEach(partido => {
@@ -121,10 +126,12 @@ function mostrarPartidos(partidos) {
 }
 
 function mostrarErrorEnPantalla(mensaje) {
-    if (DOM.loading()) DOM.loading().style.display = 'none';
-    if (DOM.error()) {
-        DOM.error().textContent = mensaje;
-        DOM.error().style.display = 'block';
+    const loading = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    if (loading) loading.style.display = 'none';
+    if (errorDiv) {
+        errorDiv.textContent = mensaje;
+        errorDiv.style.display = 'block';
     }
 }
 
