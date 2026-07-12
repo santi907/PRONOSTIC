@@ -1,16 +1,16 @@
 [
   {
     "id": 1,
-    "local": "Real Madrid",
-    "visitante": "Barcelona",
-    "fecha": "2026-07-15",
-    "prediccion": "Gana Real Madrid o Empate (1X) - Ambos anotan."
+    "local": "Argentina",
+    "visitante": "Francia",
+    "fecha": "2026-07-14",
+    "prediccion": "Semifinal del Mundial. Partido de alta intensidad. Pronóstico: Ambos anotan (Marcan ambos equipos) y más de 2.5 goles totales."
   },
   {
     "id": 2,
-    "local": "Manchester City",
-    "visitante": "Liverpool",
-    "fecha": "2026-07-16",
-    "prediccion": "Más de 2.5 goles en el partido total."
+    "local": "Brasil",
+    "visitante": "España",
+    "fecha": "2026-07-15",
+    "prediccion": "Semifinal del Mundial. Pronóstico: Clasifica España. Apuesta recomendada: Menos de 3.5 goles en el tiempo regular."
   }
 ]
