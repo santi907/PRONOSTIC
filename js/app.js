@@ -1,10 +1,10 @@
 // ==========================================
-// CONFIGURACIÓN REAL DE TU API (BZZOIRO / BSD)
+// CONFIGURACIÓN REAL DE TU API (BZZOIRO)
 // ==========================================
 const MODO_DESARROLLO = false; 
 const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf'; 
 
-// URL real extraída y adaptada de tu documentación de Bzzoiro
+// URL real extraída de tu documentación oficial
 const API_URL = 'https://sports.bzzoiro.com/football/api/v2/matches/live/'; 
 
 // ==========================================
@@ -44,32 +44,31 @@ function cargarPartidosDisponibles() {
         return response.json();
     })
     .then(data => {
-        // Bzzoiro suele entregar los partidos en un arreglo directo, en 'data' o en 'results'
+        // Adaptabilidad para leer el arreglo de partidos directo o desde subcapas de la API
         const partidosAPI = data.results || data.data || (Array.isArray(data) ? data : null);
 
         if (!partidosAPI || partidosAPI.length === 0) {
-            console.warn("No hay partidos en vivo en este instante en la API. Usando respaldo.");
+            console.warn("No hay partidos en vivo en este instante. Usando respaldo.");
             cargarRespaldoLocal();
             return;
         }
 
-        // Mapeamos los partidos manejando cualquier variante de nombres de campo de Bzzoiro
         const partidosTransformados = partidosAPI.slice(0, 10).map((item, index) => {
             const local = item.home_team?.name || item.home?.name || item.home_team || "Equipo Local";
             const visitante = item.away_team?.name || item.away?.name || item.away_team || "Equipo Visitante";
-            const liga = item.league?.name || item.tournament?.name || "Serie B / Liga";
+            const liga = item.league?.name || item.tournament?.name || "Torneo Profesional";
 
             let pronostico = "";
             const esFutbolBrasil = liga.toLowerCase().includes("serie b") || liga.toLowerCase().includes("brasil");
 
             if (esFutbolBrasil) {
                 pronostico = index % 2 === 0 
-                    ? `Torneo: ${liga}. Pronóstico: Menos de 2.5 goles (Partido cerrado).`
+                    ? `Torneo: ${liga}. Pronóstico: Menos de 2.5 goles (Partido muy cerrado).`
                     : `Torneo: ${liga}. Pronóstico: Gana o empata ${local} por localía.`;
             } else {
                 pronostico = index % 2 === 0
                     ? `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`
-                    : `Torneo: ${liga}. Pronóstico: Apuesta sin empate a favor de ${local}.`;
+                    : `Torneo: ${liga}. Pronóstico: Apuesta sin empate para ${local}.`;
             }
 
             return {
@@ -83,7 +82,7 @@ function cargarPartidosDisponibles() {
         mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.warn('API sin partidos en vivo o reconectando. Activando respaldo local...', error);
+        console.warn('API en espera de partidos en vivo. Cargando archivo local de respaldo...', error);
         cargarRespaldoLocal();
     });
 }
