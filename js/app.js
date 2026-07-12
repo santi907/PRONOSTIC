@@ -1,19 +1,32 @@
-Dashboard
-Welcome back, Jhon.
-fredyruiz91@gmail.com · 773 requests in the last 30 days.
+async function cargarPartidosDisponibles() {
+  const loading = document.getElementById('loading');
+  const errorDiv = document.getElementById('error');
 
-API Token
-Token
-dd07cdbeed19f58195949f42b3836397a172cb11
-Copy
-Regenerate
-Send this on every API request: Authorization: Token dd07cdbe…
+  if (loading) loading.style.display = 'block';
+  if (errorDiv) errorDiv.style.display = 'none';
 
-⚡ Sports Addon
-Unlock tennis, CS:GO, darts, hockey and horse racing APIs + MCP servers — $5/month. Football stays free.
+  try {
+    const res = await fetch('https://sports.bzzoiro.com/football/api/v2/matches/live/', {
+      headers: {
+        Authorization: 'dd07cdbeed19f58195949f42b3836397a172cb11`
+      }
+    });
 
-Get the Addon →
-Your addons
-⚽ Football API
-Free
-REST API v2 + MCP server. All endpoints, no rate limit.
+    if (!res.ok) throw new Error('Error en API');
+    const data = await res.json();
+
+    const partidos = (data.results || data.data || []).map(item => ({
+      local: item.home_team?.name || item.home || 'Equipo Local',
+      visitante: item.away_team?.name || item.away || 'Equipo Visitante',
+      fecha: item.date || 'HOY',
+      prediccion: item.prediction || 'Sin predicción'
+    }));
+
+    mostrarPartidos(partidos);
+  } catch (err) {
+    console.error(err);
+    mostrarErrorEnPantalla('No se pudieron cargar los partidos.');
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
+}
