@@ -8,7 +8,7 @@ async function cargarPartidosDisponibles() {
   try {
     const res = await fetch('https://sports.bzzoiro.com/football/api/v2/matches/live/', {
       headers: {
-        Authorization: 'dd07cdbeed19f58195949f42b3836397a172cb11`
+        Authorization: 'Token dd07cdbeed19f58195949f42b3836397a172cb11'
       }
     });
 
