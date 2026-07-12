@@ -1,17 +1,20 @@
 // ==========================================
 // CONFIGURACIÓN DE TU NUEVA API (BSD)
 // ==========================================
+
+// true = Usa el archivo local partidos.json
+// false = Conecta en vivo con la API de BSD
 const MODO_DESARROLLO = false; 
 
-// Tu Token oficial de BSD obtenido de tu panel
+// Tu Token de BSD extraído de tu panel
 const API_TOKEN = 'be6f00ab1f68e6b755201f1a7cd264a93be3d0cf'; 
 
-const hoy = new Date().toISOString().split('T')[0];
+// URL de BSD (Revisa la pestaña 'Read docs' en tu panel si necesitas cambiar el endpoint de partidos)
+const API_URL = 'https://api.bsd.com/v2/football/fixtures'; // Ajusta esta URL según sus docs si es necesario
 
-// ⚠️ NOTA: Haz clic en el botón "Read docs" de tu panel de BSD para confirmar la URL exacta de sus "fixtures" (partidos).
-// Por lo general, la estructura base de BSD se conecta así:
-const API_URL = `https://api.bigsportsdata.com/v2/football/fixtures?date=${hoy}`;
-
+// ==========================================
+// LÓGICA DE LA APLICACIÓN
+// ==========================================
 const DOM = {
     loading: () => document.getElementById('loading'),
     error: () => document.getElementById('error'),
@@ -19,17 +22,18 @@ const DOM = {
 };
 
 function cargarPartidosDisponibles() {
-    console.log("Iniciando carga de partidos con la API de BSD...");
+    console.log("Iniciando carga de partidos con BSD Football API...");
     
     if (DOM.loading()) DOM.loading().style.display = 'block';
     if (DOM.error()) DOM.error().style.display = 'none';
 
     if (MODO_DESARROLLO) {
+        console.log("Modo Desarrollo: Cargando datos locales.");
         setTimeout(cargarRespaldoLocal, 500);
         return;
     }
 
-    // Petición configurada con el método de autorización que te exige BSD
+    // Petición con el formato de autorización exacto que te pide BSD
     fetch(API_URL, {
         method: 'GET',
         headers: {
@@ -38,37 +42,34 @@ function cargarPartidosDisponibles() {
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error(`Error en BSD (Status ${response.status})`);
+        if (!response.ok) throw new Error(`Error BSD (Status ${response.status})`);
         return response.json();
     })
     .then(data => {
-        // NOTA: Como la estructura de datos que devuelve BSD puede variar un poco a la de API-Sports,
-        // si notas que no dibuja los partidos, mira tu consola (F12) para ver cómo vienen organizados los nombres.
-        // Este bloque está protegido; si cambia algo, saltará automáticamente a tus partidos locales.
-        
-        const partidosAPI = data.results || data.response || data; 
+        // Adaptador flexible: BSD suele entregar los datos en 'data' o directamente en el arreglo
+        const partidosAPI = data.response || data.data || data;
 
         if (!partidosAPI || partidosAPI.length === 0) {
+            console.warn("No se recibieron partidos de la API hoy. Activando respaldo.");
             cargarRespaldoLocal();
             return;
         }
 
-        // Mapeo adaptivo para tus tarjetas de predicciones
+        // Mapeo de partidos (Ajustado para proteger la app si los nombres de campos varían)
         const partidosTransformados = partidosAPI.slice(0, 10).map((item, index) => {
-            // Intentamos leer los nombres de los equipos según los estándares comunes de BSD
-            const equipoLocal = item.home_team?.name || item.teams?.home?.name || "Equipo Local";
-            const equipoVisitante = item.away_team?.name || item.teams?.away?.name || "Equipo Visitante";
-            const nombreLiga = item.league?.name || "Torneo Internacional";
+            const local = item.home_team?.name || item.teams?.home?.name || "Equipo Local";
+            const visitante = item.away_team?.name || item.teams?.away?.name || "Equipo Visitante";
+            const liga = item.league?.name || "Torneo Internacional";
 
-            let pronostico = `Torneo: ${nombreLiga}. Pronóstico: Más de 1.5 goles totales.`;
+            let pronostico = `Torneo: ${liga}. Pronóstico: Más de 1.5 goles totales.`;
             if (index % 2 === 0) {
-                pronostico = `Torneo: ${nombreLiga}. Pronóstico: Gana o empata ${equipoLocal}.`;
+                pronostico = `Torneo: ${liga}. Pronóstico: Gana o empata ${local}.`;
             }
 
             return {
-                local: equipoLocal,
-                visitante: equipoVisitante,
-                fecha: (item.date || item.fixture?.date || hoy).split('T')[0],
+                local: local,
+                visitante: visitante,
+                fecha: new Date().toISOString().split('T')[0],
                 prediccion: pronostico
             };
         });
@@ -76,7 +77,7 @@ function cargarPartidosDisponibles() {
         mostrarPartidos(partidosTransformados);
     })
     .catch(error => {
-        console.warn('Ajustando formato de la API o esperando respuesta. Cargando respaldo local por seguridad...', error);
+        console.warn('Estructura de API diferente o enlace offline. Usando respaldo local...', error);
         cargarRespaldoLocal();
     });
 }
@@ -90,7 +91,7 @@ function cargarRespaldoLocal() {
         .then(datosLocales => mostrarPartidos(datosLocales))
         .catch(err => {
             console.error(err);
-            mostrarErrorEnPantalla("Cargando base de datos de partidos...");
+            mostrarErrorEnPantalla("Predicciones en actualización. Intenta más tarde.");
         });
 }
 
@@ -106,4 +107,31 @@ function mostrarPartidos(partidos) {
         contenedor.innerHTML += `
             <div class="card">
                 <div class="partido-header">
-                    <span class="equipo-
+                    <span class="equipo-local">${partido.local}</span>
+                    <span class="vs">vs</span>
+                    <span class="equipo-visitante">${partido.visitante}</span>
+                </div>
+                <p class="fecha">Fecha: ${partido.fecha}</p>
+                <div class="prediccion">
+                    <p><strong>Predicción:</strong> ${partido.prediccion}</p>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function mostrarErrorEnPantalla(mensaje) {
+    if (DOM.loading()) DOM.loading().style.display = 'none';
+    if (DOM.error()) {
+        DOM.error().textContent = mensaje;
+        DOM.error().style.display = 'block';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', cargarPartidosDisponibles);
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+    });
+}
